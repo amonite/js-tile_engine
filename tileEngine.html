@@ -1,0 +1,160 @@
+<!-- basic tile engine !-->
+<!doctype html>
+<html>
+    <head><meta charset = "utf-8"></head>
+    <body style="background-color: rgb(50,50,50); text-align: center;">
+        <canvas id="ctx" width="640" height="480" style="border:1px solid #000000;"></canvas>
+
+        <script>
+            // get the canvas 
+            let ctx = document.getElementById("ctx").getContext("2d");
+            let WIDTH = 640;
+            let HEIGHT = 480;
+
+            // ================================ TILEMAP ================================ ;
+            
+            let tileSize = 32;
+            
+            let tileMap = [[1,1,1,1,1,1,1,1,1,1],
+                           [1,0,0,0,0,0,0,1,0,1],
+                           [1,0,0,0,0,1,0,1,0,1],
+                           [1,0,0,0,0,0,0,0,0,1],
+                           [1,1,1,0,0,0,0,0,0,1],
+                           [1,0,0,0,0,0,1,1,0,1],
+                           [1,0,0,1,0,0,1,0,0,1],
+                           [1,1,1,1,1,1,1,1,1,1]]
+
+            function drawTileMap(){
+                ctx.fillStyle = "green";
+                for(i=0;i<tileMap.length;i++){ //8
+                    for(j=0;j<10;j++){
+                        
+                        if(tileMap[i][j] == 1){
+                            
+                            ctx.fillRect(j*tileSize,i*tileSize,tileSize,tileSize);
+                        };
+                    };
+                };
+            };
+
+            // ================================ COLLISION ================================ ;
+            
+            function collide(x, y, tileW, tileH){
+                let x1;
+                let y1;
+                let x2;
+                let y2;
+                let w = tileW;
+                let h = tileH;
+                
+                x1 = parseInt(x/w);
+                y1 = parseInt(y/h);
+                x2 = parseInt(x+w-4)/w; 
+                y2 = parseInt(y+h-4)/h;
+
+                for(tileX=x1;tileX<=x2;tileX++){
+                    for(tileY=y1;tileY<=y2;tileY++){
+                        if(tileMap[tileY][tileX]==1) return true; 
+                        //debug
+                        //ctx.fillText(tileMap[tileY][tileX],320,160);
+                        //ctx.fillText("tileY = "+tileY,320,192);
+                        //ctx.fillText("tileX = "+tileX,320,224);
+                    };
+                };
+                return false;
+
+            };
+
+            // ================================ PLAYER ================================ ;
+
+            let player = {
+                x:32,
+                y:32,
+                spx:0,
+                spy:0,
+                width:28,
+                height:28,
+
+                draw:function(){
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(this.x,this.y,this.width,this.height);
+                    //debug
+                    //ctx.fillText("x1 = "+parseInt(this.x/32),320,32);
+                    //ctx.fillText("x2 = "+parseInt((this.x+32-4)/32),320,64);
+                    //ctx.fillText("y1 = "+parseInt(this.y/32),320,96);
+                    //ctx.fillText("y2 = "+parseInt((this.y+32-4)/32),320,128);
+                },
+
+                move:function(){
+                    if(Key.isDown(Key.UP)) this.spy-=1;
+                    if(Key.isDown(Key.DOWN)) this.spy+=1;
+                    if(Key.isDown(Key.RIGHT)) this.spx+=1;
+                    if(Key.isDown(Key.LEFT)) this.spx-=1;
+
+                    this.spx*=0.85;
+                    this.spy*=0.85;
+
+                    this.x+=this.spx;
+
+                    if(collide(this.x,this.y,tileSize,tileSize)){
+                        this.x-=this.spx;
+                        this.spx = 0;
+                    };
+
+                    this.y+=this.spy;
+
+                    if(collide(this.x,this.y,tileSize,tileSize)){
+                        this.y-=this.spy;
+                        this.spy = 0;
+                    };
+                }
+
+            }
+            //key object taken from :
+            //http://nokarma.org/2011/02/27/javascript-game-development-keyboard-input/index.html
+
+            let Key = {
+                _pressed:{},
+
+                LEFT:37,
+                RIGHT:39,
+                UP:38,
+                DOWN:40,
+
+                isDown:function(keyCode){
+                    return this._pressed[keyCode] 
+                },
+                onKeydown: function(event) {
+                    this._pressed[event.keyCode] = true;
+                },
+  
+                onKeyup: function(event) {
+                    delete this._pressed[event.keyCode];
+                }
+            };
+            
+            //event listener for the keys 
+            window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
+            window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+
+            // ================================ MAIN LOOP ================================ ; 
+
+            function main(){
+                //cls 
+                ctx.clearRect(0,0,WIDTH, HEIGHT);
+                
+                drawTileMap();
+
+                player.draw();
+                player.move();
+                //if(Key.isDown(Key.UP)) console.log("UP");
+                //if(Key.isDown(Key.DOWN)) console.log("DOWN");
+                //if(Key.isDown(Key.RIGHT)) console.log("RIGHT");
+                //if(Key.isDown(Key.LEFT)) console.log("LEFT");
+                //requestAnimationFrame(main);
+            }
+            main();
+            setInterval(main,40); //refresh rate ?
+        </script>
+    </body>
+</html>
